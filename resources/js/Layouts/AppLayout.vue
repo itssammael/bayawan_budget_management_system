@@ -7,12 +7,65 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import ToastList from '@/Components/ToastList.vue';
+import { onMounted, watch, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+
+const { props: pageProps } = usePage();
 
 defineProps({
     title: String,
 });
 
 const showingNavigationDropdown = ref(false);
+
+const updateFavicon = (iconUrl) => {
+    if (!iconUrl) return;
+    let link = document.querySelector("link[rel*='icon']");
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+    }
+    link.href = iconUrl;
+};
+
+onMounted(() => {
+    if (pageProps.system_settings?.system_icon) {
+        updateFavicon(pageProps.system_settings.system_icon);
+    }
+});
+
+watch(() => pageProps.system_settings?.system_icon, (newIcon) => {
+    if (newIcon) {
+        updateFavicon(newIcon);
+    }
+});
+
+const themeStyles = computed(() => {
+    const settings = pageProps.system_settings || {};
+    const accent = settings.accent_color || '#4f46e5';
+    
+    // Function to determine contrast text color
+    const getContrast = (hex) => {
+        if (!hex || hex.length < 6) return 'white';
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        return (yiq >= 160) ? '#000000' : '#ffffff';
+    };
+
+    return {
+        '--header-color': settings.header_color || '#ffffff',
+        '--header-text-color': settings.header_text_color || '#374151',
+        '--bg-color': settings.bg_color || '#f3f4f6',
+        '--accent-color': accent,
+        '--accent-color-light': `color-mix(in srgb, ${accent}, transparent 92%)`,
+        '--accent-color-dark': `color-mix(in srgb, ${accent}, black 30%)`,
+        '--accent-contrast': getContrast(accent),
+    };
+});
 
 const switchToTeam = (team) => {
     router.put(route('current-team.update'), {
@@ -33,8 +86,10 @@ const logout = () => {
 
         <Banner />
 
-        <div class="min-h-screen bg-gray-100">
-            <nav class="bg-white border-b border-gray-100">
+        <ToastList />
+
+        <div class="min-h-screen bg-[var(--bg-color)]" :style="themeStyles">
+            <nav class="bg-[var(--header-color)] border-b border-gray-100 shadow-sm">
                 <!-- Primary Navigation Menu -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
@@ -46,10 +101,27 @@ const logout = () => {
                                 </Link>
                             </div>
 
-                            <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                    Dashboard
+                                    Budget Summary
+                                </NavLink>
+                                <NavLink :href="route('budget.aip')" :active="route().current('budget.aip')">
+                                    Program Monitoring (AIP)
+                                </NavLink>
+                                <NavLink :href="route('budget.appropriations')" :active="route().current('budget.appropriations')">
+                                    Appropriations
+                                </NavLink>
+                                <NavLink :href="route('budget.procurement')" :active="route().current('budget.procurement')">
+                                    Procurement
+                                </NavLink>
+                                <NavLink v-if="$page.props.auth.user.department && $page.props.auth.user.department.name === 'Admin'" :href="route('departments.index')" :active="route().current('departments.index')">
+                                    Departments
+                                </NavLink>
+                                <NavLink :href="route('users.index')" :active="route().current('users.index')">
+                                    Users
+                                </NavLink>
+                                <NavLink v-if="$page.props.auth.user.department && $page.props.auth.user.department.name === 'Admin'" :href="route('settings.index')" :active="route().current('settings.index')">
+                                    Settings
                                 </NavLink>
                             </div>
                         </div>
@@ -192,7 +264,25 @@ const logout = () => {
                 <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden">
                     <div class="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                            Dashboard
+                            Budget Summary
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('budget.aip')" :active="route().current('budget.aip')">
+                            Program Monitoring (AIP)
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('budget.appropriations')" :active="route().current('budget.appropriations')">
+                            Appropriations
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('budget.procurement')" :active="route().current('budget.procurement')">
+                            Procurement
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth.user.department && $page.props.auth.user.department.name === 'Admin'" :href="route('departments.index')" :active="route().current('departments.index')">
+                            Departments
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('users.index')" :active="route().current('users.index')">
+                            Users
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth.user.department && $page.props.auth.user.department.name === 'Admin'" :href="route('settings.index')" :active="route().current('settings.index')">
+                            Settings
                         </ResponsiveNavLink>
                     </div>
 

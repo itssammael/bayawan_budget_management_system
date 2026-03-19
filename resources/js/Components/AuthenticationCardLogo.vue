@@ -1,10 +1,12 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+const { props } = usePage();
 </script>
 
 <template>
     <Link :href="'/'">
-        <svg
+        <img v-if="props.system_settings?.system_logo" :src="props.system_settings.system_logo" class="h-16 w-auto object-contain" alt="System Logo">
+        <svg v-else
             class="size-16"
             viewBox="0 0 48 48"
             fill="none"
