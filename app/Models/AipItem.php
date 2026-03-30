@@ -12,17 +12,17 @@ class AipItem extends Model
     use HasFactory, LogsActivity;
 
     protected $fillable = [
+        'budget_year_id',
+        'budget_classification_id',
         'fund_source_id',
+        'ppsa_id',
         'aip_reference_code',
         'ppa_description',
         'department_id',
         'start_date',
         'end_date',
         'expected_outputs',
-        'amount_ps',
-        'amount_mooe',
-        'amount_fe',
-        'amount_co',
+        'amount',
     ];
 
     public function fundSource()
@@ -33,5 +33,25 @@ class AipItem extends Model
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function budgetYear()
+    {
+        return $this->belongsTo(BudgetYear::class);
+    }
+
+    public function budgetClassification()
+    {
+        return $this->belongsTo(BudgetClassification::class);
+    }
+
+    public function ppsa()
+    {
+        return $this->belongsTo(Ppsa::class);
+    }
+
+    public function implementingDepartments()
+    {
+        return $this->hasMany(AipImplementingDepartment::class);
     }
 }

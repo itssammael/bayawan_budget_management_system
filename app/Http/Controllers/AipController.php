@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\AipItem;
 use App\Models\FundSource;
+use App\Models\BudgetYear;
+use App\Models\BudgetClassification;
+use App\Models\Ppsa;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,7 +14,7 @@ class AipController extends Controller
 {
     public function index(Request $request)
     {
-        $query = AipItem::with(['fundSource', 'department']);
+        $query = AipItem::with(['fundSource', 'department', 'budgetYear', 'budgetClassification', 'ppsa', 'implementingDepartments.department']);
 
         if ($request->has('search')) {
             $query->where(function ($q) use ($request) {
@@ -29,6 +32,9 @@ class AipController extends Controller
             'items' => $items,
             'filters' => $request->only(['search']),
             'fund_sources' => FundSource::all(),
+            'budget_years' => BudgetYear::orderBy('year', 'desc')->get(),
+            'budget_classifications' => BudgetClassification::all(),
+            'ppsas' => Ppsa::all(),
             'departments' => \App\Models\Department::where('name', '!=', 'Admin')->get(),
         ]);
     }
@@ -36,24 +42,36 @@ class AipController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'budget_year_id' => 'required|exists:budget_years,id',
+            'budget_classification_id' => 'required|exists:budget_classifications,id',
             'fund_source_id' => 'required|exists:fund_sources,id',
+            'ppsa_id' => 'nullable|exists:ppsas,id',
             'aip_reference_code' => 'required|string|unique:aip_items,aip_reference_code',
             'ppa_description' => 'required|string',
             'department_id' => 'required|exists:departments,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'expected_outputs' => 'nullable|string',
-            'amount_ps' => 'required|numeric|min:0',
-            'amount_mooe' => 'required|numeric|min:0',
-            'amount_fe' => 'required|numeric|min:0',
-            'amount_co' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0',
+            'implementing_departments' => 'nullable|array',
+            'implementing_departments.*.department_id' => 'required|exists:departments,id',
+            'implementing_departments.*.amount' => 'required|numeric|min:0',
         ]);
 
         if (auth()->user()->department?->name !== 'Admin') {
             $validated['department_id'] = auth()->user()->department_id;
         }
 
-        AipItem::create($validated);
+        \DB::transaction(function () use ($validated) {
+            $implementingDepartments = $validated['implementing_departments'] ?? [];
+            unset($validated['implementing_departments']);
+            
+            $aip = AipItem::create($validated);
+            
+            foreach ($implementingDepartments as $dept) {
+                $aip->implementingDepartments()->create($dept);
+            }
+        });
 
         return redirect()->back()->with('success', 'AIP Item created successfully.');
     }
@@ -61,24 +79,37 @@ class AipController extends Controller
     public function update(Request $request, AipItem $aip)
     {
         $validated = $request->validate([
+            'budget_year_id' => 'required|exists:budget_years,id',
+            'budget_classification_id' => 'required|exists:budget_classifications,id',
             'fund_source_id' => 'required|exists:fund_sources,id',
+            'ppsa_id' => 'nullable|exists:ppsas,id',
             'aip_reference_code' => 'required|string|unique:aip_items,aip_reference_code,' . $aip->id,
             'ppa_description' => 'required|string',
             'department_id' => 'required|exists:departments,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'expected_outputs' => 'nullable|string',
-            'amount_ps' => 'required|numeric|min:0',
-            'amount_mooe' => 'required|numeric|min:0',
-            'amount_fe' => 'required|numeric|min:0',
-            'amount_co' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0',
+            'implementing_departments' => 'nullable|array',
+            'implementing_departments.*.department_id' => 'required|exists:departments,id',
+            'implementing_departments.*.amount' => 'required|numeric|min:0',
         ]);
 
         if (auth()->user()->department?->name !== 'Admin') {
             $validated['department_id'] = auth()->user()->department_id;
         }
 
-        $aip->update($validated);
+        \DB::transaction(function () use ($validated, $aip) {
+            $implementingDepartments = $validated['implementing_departments'] ?? [];
+            unset($validated['implementing_departments']);
+            
+            $aip->update($validated);
+            
+            $aip->implementingDepartments()->delete();
+            foreach ($implementingDepartments as $dept) {
+                $aip->implementingDepartments()->create($dept);
+            }
+        });
 
         return redirect()->back()->with('success', 'AIP Item updated successfully.');
     }

@@ -12,6 +12,7 @@ class Department extends Model
 
     protected $fillable = [
         'name',
+        'shortname',
         'code',
         'department_head',
     ];
@@ -29,5 +30,10 @@ class Department extends Model
     public function appropriations()
     {
         return $this->hasMany(Appropriation::class);
+    }
+
+    public function aipImplementingDepartments()
+    {
+        return $this->hasMany(AipImplementingDepartment::class);
     }
 }

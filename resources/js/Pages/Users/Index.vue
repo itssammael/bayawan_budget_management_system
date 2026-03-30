@@ -9,6 +9,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
 
 const props = defineProps({
     users: Object,
@@ -174,6 +175,13 @@ const getPermissionColor = (p) => {
         default: return 'bg-gray-100 text-gray-600';
     }
 };
+
+const departmentsWithOptions = computed(() => {
+    return [
+        { id: '', name: 'No Department' },
+        ...props.departments
+    ];
+});
 </script>
 
 <template>
@@ -359,16 +367,13 @@ const getPermissionColor = (p) => {
                     
                     <div>
                         <InputLabel for="department_id" value="Department" />
-                        <select 
+                        <SearchableSelect 
                             v-model="userForm.department_id" 
-                            class="mt-1 block w-full border-gray-300 focus:border-[var(--accent-color)] focus:ring-[var(--accent-color)] rounded-md shadow-sm"
+                            :options="departmentsWithOptions" 
+                            placeholder="Select Department"
+                            :error="userForm.errors.department_id"
                             :disabled="!isGlobalAdmin"
-                        >
-                            <option value="">No Department</option>
-                            <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                                {{ dept.name }}
-                            </option>
-                        </select>
+                        />
                         <InputError :message="userForm.errors.department_id" class="mt-2" />
                     </div>
 

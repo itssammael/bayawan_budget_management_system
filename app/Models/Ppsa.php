@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Traits\LogsActivity;
 
-class BudgetCategory extends Model
+class Ppsa extends Model
 {
     use HasFactory, LogsActivity;
 

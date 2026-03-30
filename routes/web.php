@@ -50,9 +50,13 @@ Route::middleware([
         Route::put('/settings/budget-years/{budgetYear}', [SettingsController::class, 'updateBudgetYear'])->name('settings.budget-years.update');
         Route::delete('/settings/budget-years/{budgetYear}', [SettingsController::class, 'destroyBudgetYear'])->name('settings.budget-years.destroy');
 
-        Route::post('/settings/budget-categories', [SettingsController::class, 'storeBudgetCategory'])->name('settings.budget-categories.store');
-        Route::put('/settings/budget-categories/{budgetCategory}', [SettingsController::class, 'updateBudgetCategory'])->name('settings.budget-categories.update');
-        Route::delete('/settings/budget-categories/{budgetCategory}', [SettingsController::class, 'destroyBudgetCategory'])->name('settings.budget-categories.destroy');
+        Route::post('/settings/ppsas', [SettingsController::class, 'storePpsa'])->name('settings.ppsas.store');
+        Route::put('/settings/ppsas/{ppsa}', [SettingsController::class, 'updatePpsa'])->name('settings.ppsas.update');
+        Route::delete('/settings/ppsas/{ppsa}', [SettingsController::class, 'destroyPpsa'])->name('settings.ppsas.destroy');
+
+        Route::post('/settings/budget-classifications', [SettingsController::class, 'storeBudgetClassification'])->name('settings.budget-classifications.store');
+        Route::put('/settings/budget-classifications/{budgetClassification}', [SettingsController::class, 'updateBudgetClassification'])->name('settings.budget-classifications.update');
+        Route::delete('/settings/budget-classifications/{budgetClassification}', [SettingsController::class, 'destroyBudgetClassification'])->name('settings.budget-classifications.destroy');
 
         Route::post('/settings/appearance', [SettingsController::class, 'updateAppearance'])->name('settings.appearance.update');
 

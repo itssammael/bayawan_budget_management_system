@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\FundSource;
 use App\Models\BudgetYear;
-use App\Models\BudgetCategory;
+use App\Models\Ppsa;
+use App\Models\BudgetClassification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -18,21 +19,22 @@ class SettingsController extends Controller
     {
 
         $tab = $request->get('tab', 'fund_sources');
-        $searchCategory = $request->get('search_category');
+        $searchPpsa = $request->get('search_ppsa');
 
-        $budgetCategoriesQuery = BudgetCategory::query();
-        if ($searchCategory) {
-            $budgetCategoriesQuery->where('name', 'like', '%' . $searchCategory . '%');
+        $ppsasQuery = Ppsa::query();
+        if ($searchPpsa) {
+            $ppsasQuery->where('name', 'like', '%' . $searchPpsa . '%');
         }
 
         return Inertia::render('Settings/Index', [
             'active_tab' => $tab,
             'filters' => [
-                'search_category' => $searchCategory,
+                'search_ppsa' => $searchPpsa,
             ],
             'fund_sources' => FundSource::paginate(12, ['*'], 'fs_page')->withQueryString(),
             'budget_years' => BudgetYear::paginate(12, ['*'], 'by_page')->withQueryString(),
-            'budget_categories' => $budgetCategoriesQuery->paginate(12, ['*'], 'cat_page')->withQueryString(),
+            'ppsas' => $ppsasQuery->paginate(12, ['*'], 'ppsa_page')->withQueryString(),
+            'budget_classifications' => BudgetClassification::paginate(12, ['*'], 'bc_page')->withQueryString(),
             'activity_logs' => ActivityLog::with(['user', 'subject'])->latest()->paginate(20, ['*'], 'log_page')->withQueryString(),
             'system_settings' => SystemSetting::all()->pluck('value', 'key'),
         ]);
@@ -140,33 +142,63 @@ class SettingsController extends Controller
         return redirect()->back()->with('success', 'Budget Year deleted successfully.');
     }
 
-    // Budget Category CRUD
-    public function storeBudgetCategory(Request $request)
+    // PPSA CRUD
+    public function storePpsa(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:budget_categories,name',
+            'name' => 'required|string|max:255|unique:ppsas,name',
         ]);
 
-        BudgetCategory::create($validated);
+        Ppsa::create($validated);
 
-        return redirect()->back()->with('success', 'Budget Category created successfully.');
+        return redirect()->back()->with('success', 'PPSA created successfully.');
     }
 
-    public function updateBudgetCategory(Request $request, BudgetCategory $budgetCategory)
+    public function updatePpsa(Request $request, Ppsa $ppsa)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:budget_categories,name,' . $budgetCategory->id,
+            'name' => 'required|string|max:255|unique:ppsas,name,' . $ppsa->id,
         ]);
 
-        $budgetCategory->update($validated);
+        $ppsa->update($validated);
 
-        return redirect()->back()->with('success', 'Budget Category updated successfully.');
+        return redirect()->back()->with('success', 'PPSA updated successfully.');
     }
 
-    public function destroyBudgetCategory(BudgetCategory $budgetCategory)
+    public function destroyPpsa(Ppsa $ppsa)
     {
-        $budgetCategory->delete();
+        $ppsa->delete();
 
-        return redirect()->back()->with('success', 'Budget Category deleted successfully.');
+        return redirect()->back()->with('success', 'PPSA deleted successfully.');
+    }
+
+    // Budget Classification CRUD
+    public function storeBudgetClassification(Request $request)
+    {
+        $validated = $request->validate([
+            'classification_name' => 'required|string|max:255|unique:budget_classifications,classification_name',
+        ]);
+
+        BudgetClassification::create($validated);
+
+        return redirect()->back()->with('success', 'Budget Classification created successfully.');
+    }
+
+    public function updateBudgetClassification(Request $request, BudgetClassification $budgetClassification)
+    {
+        $validated = $request->validate([
+            'classification_name' => 'required|string|max:255|unique:budget_classifications,classification_name,' . $budgetClassification->id,
+        ]);
+
+        $budgetClassification->update($validated);
+
+        return redirect()->back()->with('success', 'Budget Classification updated successfully.');
+    }
+
+    public function destroyBudgetClassification(BudgetClassification $budgetClassification)
+    {
+        $budgetClassification->delete();
+
+        return redirect()->back()->with('success', 'Budget Classification deleted successfully.');
     }
 }

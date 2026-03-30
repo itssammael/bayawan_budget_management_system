@@ -11,6 +11,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import CurrencyInput from '@/Components/CurrencyInput.vue';
 import InputError from '@/Components/InputError.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
 
 const props = defineProps({
     transactions: Object,
@@ -121,6 +122,21 @@ const showDepartment = computed(() => {
     const user = usePage().props.auth.user;
     return user.department && user.department.name === 'Admin';
 });
+
+const statusOptions = [
+    { id: 'Planned', name: 'Planned' },
+    { id: 'On Process', name: 'On Process' },
+    { id: 'Awarded', name: 'Awarded' },
+    { id: 'Completed', name: 'Completed' },
+    { id: 'Cancelled', name: 'Cancelled' },
+];
+
+const searchableAppropriations = computed(() => {
+    return props.appropriations.map(app => ({
+        ...app,
+        display_label: `[${app.fund_source?.name || 'N/A'} ${app.budget_year?.year || 'N/A'}] ${app.ppa_description}`
+    }));
+});
 </script>
 
 <template>
@@ -202,12 +218,13 @@ const showDepartment = computed(() => {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <InputLabel for="appropriation" value="Link to Appropriation" />
-                        <select v-model="form.appropriation_id" class="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                            <option value="">Select Appropriation (PPA)</option>
-                            <option v-for="app in appropriations" :key="app.id" :value="app.id">
-                                [{{ app.fund_source?.name || 'N/A' }} {{ app.budget_year?.year || 'N/A' }}] {{ app.ppa_description }}
-                            </option>
-                        </select>
+                        <SearchableSelect 
+                            v-model="form.appropriation_id" 
+                            :options="searchableAppropriations" 
+                            label="display_label"
+                            placeholder="Select Appropriation (PPA)"
+                            :error="form.errors.appropriation_id"
+                        />
                         <InputError :message="form.errors.appropriation_id" class="mt-2" />
                     </div>
 
@@ -219,22 +236,23 @@ const showDepartment = computed(() => {
 
                     <div>
                         <InputLabel for="status" value="Status" />
-                        <select v-model="form.status" class="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                            <option value="Planned">Planned</option>
-                            <option value="On Process">On Process</option>
-                            <option value="Awarded">Awarded</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Cancelled">Cancelled</option>
-                        </select>
+                        <SearchableSelect 
+                            v-model="form.status" 
+                            :options="statusOptions" 
+                            placeholder="Select Status"
+                            :error="form.errors.status"
+                        />
                         <InputError :message="form.errors.status" class="mt-2" />
                     </div>
 
                     <div v-if="showDepartment" class="md:col-span-2">
                         <InputLabel for="department_id" value="Department" />
-                        <select v-model="form.department_id" class="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                            <option value="">Select Department</option>
-                            <option v-for="dept in departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
-                        </select>
+                        <SearchableSelect 
+                            v-model="form.department_id" 
+                            :options="departments" 
+                            placeholder="Select Department"
+                            :error="form.errors.department_id"
+                        />
                         <InputError :message="form.errors.department_id" class="mt-2" />
                     </div>
 

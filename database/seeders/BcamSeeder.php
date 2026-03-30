@@ -21,8 +21,8 @@ class BcamSeeder extends Seeder
         $y2023 = \App\Models\BudgetYear::firstOrCreate(['year' => 2023]);
         $y2024 = \App\Models\BudgetYear::firstOrCreate(['year' => 2024]);
 
-        // Budget Categories
-        $categories = [
+        // PPSAs
+        $ppsas = [
             'Travelling Expenses',
             'Training Expenses',
             'Office Supplies Expenses',
@@ -46,20 +46,20 @@ class BcamSeeder extends Seeder
             'OTHER PROPERTY PLANT & EQUIPMENT',
         ];
 
-        foreach ($categories as $categoryName) {
-            \App\Models\BudgetCategory::updateOrCreate(['name' => $categoryName]);
+        foreach ($ppsas as $ppsaName) {
+            \App\Models\Ppsa::updateOrCreate(['name' => $ppsaName]);
         }
 
-        $mooe = \App\Models\BudgetCategory::where('name', 'Office Supplies Expenses')->first();
-        $co = \App\Models\BudgetCategory::where('name', 'MACHINERY')->first();
-        $qrf = \App\Models\BudgetCategory::where('name', 'Quick Response Fund (QRF)')->first();
+        $mooe = \App\Models\Ppsa::where('name', 'Office Supplies Expenses')->first();
+        $co = \App\Models\Ppsa::where('name', 'MACHINERY')->first();
+        $qrf = \App\Models\Ppsa::where('name', 'Quick Response Fund (QRF)')->first();
 
         // Sample Appropriations for 2024
         \App\Models\Appropriation::updateOrCreate(
             ['ppa_description' => 'Office Supplies Expenses', 'budget_year_id' => $y2024->id],
             [
                 'fund_source_id' => $ldrr->id,
-                'budget_category_id' => $mooe->id,
+                'ppsa_id' => $mooe->id,
                 'account_code' => '5-02-03-010',
                 'appropriated_amount' => 500000,
                 'allotment' => 500000,
@@ -72,7 +72,7 @@ class BcamSeeder extends Seeder
             ['ppa_description' => 'Motor Vehicles', 'budget_year_id' => $y2024->id],
             [
                 'fund_source_id' => $ldrr->id,
-                'budget_category_id' => $co->id,
+                'ppsa_id' => $co->id,
                 'account_code' => '1-07-05-020',
                 'appropriated_amount' => 2500000,
                 'allotment' => 2500000,
@@ -85,7 +85,7 @@ class BcamSeeder extends Seeder
             ['ppa_description' => 'Relief Operations (QRF)', 'budget_year_id' => $y2024->id],
             [
                 'fund_source_id' => $ldrr->id,
-                'budget_category_id' => $qrf->id,
+                'ppsa_id' => $qrf->id,
                 'account_code' => '5-02-99-999',
                 'appropriated_amount' => 10000000,
                 'allotment' => 5000000,

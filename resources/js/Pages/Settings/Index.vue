@@ -14,17 +14,18 @@ const props = defineProps({
     active_tab: String,
     fund_sources: Object,
     budget_years: Object,
-    budget_categories: Object,
+    ppsas: Object,
+    budget_classifications: Object,
     activity_logs: Object,
     system_settings: Object,
     filters: Object,
 });
 
 const activeTab = ref(props.active_tab || 'fund_sources');
-const searchCategory = ref(props.filters?.search_category || '');
+const searchPpsa = ref(props.filters?.search_ppsa || '');
 
-watch(searchCategory, (value) => {
-    router.get(route('settings.index'), { tab: activeTab.value, search_category: value }, {
+watch(searchPpsa, (value) => {
+    router.get(route('settings.index'), { tab: activeTab.value, search_ppsa: value }, {
         preserveState: true,
         replace: true
     });
@@ -62,11 +63,13 @@ const managingFundSource = ref(false);
 const editingFundSource = ref(null);
 const managingBudgetYear = ref(false);
 const editingBudgetYear = ref(null);
-const managingCategory = ref(false);
-const editingCategory = ref(null);
+const managingPpsa = ref(false);
+const editingPpsa = ref(null);
+const managingClassification = ref(false);
+const editingClassification = ref(null);
 const confirmingDeletion = ref(false);
 const itemToDelete = ref(null);
-const deleteType = ref(null); // 'fund_source', 'budget_year', 'category'
+const deleteType = ref(null); // 'fund_source', 'budget_year', 'ppsa', 'classification'
 
 // Forms
 const fundSourceForm = useForm({
@@ -78,8 +81,12 @@ const budgetYearForm = useForm({
     year: new Date().getFullYear(),
 });
 
-const categoryForm = useForm({
+const ppsaForm = useForm({
     name: '',
+});
+
+const classificationForm = useForm({
+    classification_name: '',
 });
 
 const appearanceForm = useForm({
@@ -152,22 +159,41 @@ const saveBudgetYear = () => {
     }
 };
 
-// Logic for Categories
-const openCreateCategory = () => {
-    editingCategory.value = null;
-    categoryForm.reset();
-    managingCategory.value = true;
+// Logic for PPSAs
+const openCreatePpsa = () => {
+    editingPpsa.value = null;
+    ppsaForm.reset();
+    managingPpsa.value = true;
 };
-const openEditCategory = (item) => {
-    editingCategory.value = item;
-    categoryForm.name = item.name;
-    managingCategory.value = true;
+const openEditPpsa = (item) => {
+    editingPpsa.value = item;
+    ppsaForm.name = item.name;
+    managingPpsa.value = true;
 };
-const saveCategory = () => {
-    if (editingCategory.value) {
-        categoryForm.put(route('settings.budget-categories.update', editingCategory.value.id), { onSuccess: () => closeModal() });
+const savePpsa = () => {
+    if (editingPpsa.value) {
+        ppsaForm.put(route('settings.ppsas.update', editingPpsa.value.id), { onSuccess: () => closeModal() });
     } else {
-        categoryForm.post(route('settings.budget-categories.store'), { onSuccess: () => closeModal() });
+        ppsaForm.post(route('settings.ppsas.store'), { onSuccess: () => closeModal() });
+    }
+};
+
+// Logic for Classifications
+const openCreateClassification = () => {
+    editingClassification.value = null;
+    classificationForm.reset();
+    managingClassification.value = true;
+};
+const openEditClassification = (item) => {
+    editingClassification.value = item;
+    classificationForm.classification_name = item.classification_name;
+    managingClassification.value = true;
+};
+const saveClassification = () => {
+    if (editingClassification.value) {
+        classificationForm.put(route('settings.budget-classifications.update', editingClassification.value.id), { onSuccess: () => closeModal() });
+    } else {
+        classificationForm.post(route('settings.budget-classifications.store'), { onSuccess: () => closeModal() });
     }
 };
 
@@ -181,7 +207,8 @@ const performDelete = () => {
     const routes = {
         fund_source: 'settings.fund-sources.destroy',
         budget_year: 'settings.budget-years.destroy',
-        category: 'settings.budget-categories.destroy',
+        ppsa: 'settings.ppsas.destroy',
+        classification: 'settings.budget-classifications.destroy',
     };
     router.delete(route(routes[deleteType.value], itemToDelete.value.id), {
         onSuccess: () => (confirmingDeletion.value = false),
@@ -191,13 +218,16 @@ const performDelete = () => {
 const closeModal = () => {
     managingFundSource.value = false;
     managingBudgetYear.value = false;
-    managingCategory.value = false;
+    managingPpsa.value = false;
+    managingClassification.value = false;
     fundSourceForm.reset();
     budgetYearForm.reset();
-    categoryForm.reset();
+    ppsaForm.reset();
+    classificationForm.reset();
     editingFundSource.value = null;
     editingBudgetYear.value = null;
-    editingCategory.value = null;
+    editingPpsa.value = null;
+    editingClassification.value = null;
 };
 </script>
 
@@ -219,7 +249,8 @@ const closeModal = () => {
                                 v-for="tab in [
                                     {id:'fund_sources', label:'Fund Sources'},
                                     {id:'budget_years', label:'Budget Years'},
-                                    {id:'categories', label:'Appropriation Categories'},
+                                    {id:'ppsas', label:'PPSAs'},
+                                    {id:'classifications', label:'Budget Classifications'},
                                     {id:'appearance', label:'System Appearance'},
                                     {id:'user_logs', label:'User Logs'}
                                 ]"
@@ -294,40 +325,69 @@ const closeModal = () => {
                             </div>
                         </div>
 
-                        <!-- Categories Tab -->
-                        <div v-if="activeTab === 'categories'">
+                        <!-- PPSAs Tab -->
+                        <div v-if="activeTab === 'ppsas'">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-                                <h3 class="text-lg font-medium text-gray-900">Manage Appropriation Categories</h3>
+                                <h3 class="text-lg font-medium text-gray-900">Manage PPSAs</h3>
                                 <div class="flex space-x-3 w-full sm:w-auto">
                                     <input
-                                        v-model="searchCategory"
+                                        v-model="searchPpsa"
                                         type="search"
-                                        placeholder="Search Categories..."
+                                        placeholder="Search PPSAs..."
                                         class="border-gray-300 focus:border-[var(--accent-color)] focus:ring-[var(--accent-color)] rounded-md shadow-sm text-sm w-full sm:w-64"
                                     >
-                                    <PrimaryButton @click="openCreateCategory" class="whitespace-nowrap">Add Category</PrimaryButton>
+                                    <PrimaryButton @click="openCreatePpsa" class="whitespace-nowrap">Add PPSA</PrimaryButton>
                                 </div>
                             </div>
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50 uppercase text-[10px] font-semibold text-gray-600">
                                     <tr>
-                                        <th class="px-6 py-3 text-left">Category Name</th>
+                                        <th class="px-6 py-3 text-left">PPSA Name</th>
                                         <th class="px-6 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200 text-xs text-xs">
-                                    <tr v-for="cat in budget_categories.data" :key="cat.id" class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 font-medium">{{ cat.name }}</td>
+                                    <tr v-for="ppsa in ppsas.data" :key="ppsa.id" class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 font-medium">{{ ppsa.name }}</td>
                                         <td class="px-6 py-4 text-right space-x-3">
-                                            <button @click="openEditCategory(cat)" class="text-[var(--accent-color-dark)] hover:text-[var(--accent-color)] font-semibold transition">Edit</button>
-                                            <button @click="confirmDelete(cat, 'category')" class="text-red-600 hover:text-red-900">Delete</button>
+                                            <button @click="openEditPpsa(ppsa)" class="text-[var(--accent-color-dark)] hover:text-[var(--accent-color)] font-semibold transition">Edit</button>
+                                            <button @click="confirmDelete(ppsa, 'ppsa')" class="text-red-600 hover:text-red-900">Delete</button>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
 
                             <div class="mt-6">
-                                <Pagination :links="budget_categories.links" />
+                                <Pagination :links="ppsas.links" />
+                            </div>
+                        </div>
+
+                        <!-- Classifications Tab -->
+                        <div v-if="activeTab === 'classifications'">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-lg font-medium text-gray-900">Manage Budget Classifications</h3>
+                                <PrimaryButton @click="openCreateClassification">Add Classification</PrimaryButton>
+                            </div>
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 uppercase text-[10px] font-semibold text-gray-600">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left">Classification Name</th>
+                                        <th class="px-6 py-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200 text-xs text-xs">
+                                    <tr v-for="bc in budget_classifications.data" :key="bc.id" class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 font-medium">{{ bc.classification_name }}</td>
+                                        <td class="px-6 py-4 text-right space-x-3">
+                                            <button @click="openEditClassification(bc)" class="text-[var(--accent-color-dark)] hover:text-[var(--accent-color)] font-semibold transition">Edit</button>
+                                            <button @click="confirmDelete(bc, 'classification')" class="text-red-600 hover:text-red-900">Delete</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="mt-6">
+                                <Pagination :links="budget_classifications.links" />
                             </div>
                         </div>
 
@@ -598,19 +658,35 @@ const closeModal = () => {
             </template>
         </DialogModal>
 
-        <!-- Category Modal -->
-        <DialogModal :show="managingCategory" @close="closeModal">
-            <template #title>{{ editingCategory ? 'Edit Category' : 'Add New Category' }}</template>
+        <!-- PPSA Modal -->
+        <DialogModal :show="managingPpsa" @close="closeModal">
+            <template #title>{{ editingPpsa ? 'Edit PPSA' : 'Add New PPSA' }}</template>
             <template #content>
                 <div>
-                    <InputLabel value="Category Name" />
-                    <TextInput v-model="categoryForm.name" type="text" class="mt-1 block w-full" />
-                    <InputError :message="categoryForm.errors.name" class="mt-2" />
+                    <InputLabel value="PPSA Name" />
+                    <TextInput v-model="ppsaForm.name" type="text" class="mt-1 block w-full" />
+                    <InputError :message="ppsaForm.errors.name" class="mt-2" />
                 </div>
             </template>
             <template #footer>
                 <SecondaryButton @click="closeModal">Cancel</SecondaryButton>
-                <PrimaryButton class="ml-3" :disabled="categoryForm.processing" @click="saveCategory">Save</PrimaryButton>
+                <PrimaryButton class="ml-3" :disabled="ppsaForm.processing" @click="savePpsa">Save</PrimaryButton>
+            </template>
+        </DialogModal>
+
+        <!-- Classification Modal -->
+        <DialogModal :show="managingClassification" @close="closeModal">
+            <template #title>{{ editingClassification ? 'Edit Classification' : 'Add New Classification' }}</template>
+            <template #content>
+                <div>
+                    <InputLabel value="Classification Name" />
+                    <TextInput v-model="classificationForm.classification_name" type="text" class="mt-1 block w-full" />
+                    <InputError :message="classificationForm.errors.classification_name" class="mt-2" />
+                </div>
+            </template>
+            <template #footer>
+                <SecondaryButton @click="closeModal">Cancel</SecondaryButton>
+                <PrimaryButton class="ml-3" :disabled="classificationForm.processing" @click="saveClassification">Save</PrimaryButton>
             </template>
         </DialogModal>
 

@@ -20,6 +20,7 @@ class DepartmentController extends Controller
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->where('name', 'like', "%{$search}%")
+                  ->orWhere('shortname', 'like', "%{$search}%")
                   ->orWhere('code', 'like', "%{$search}%")
                   ->orWhere('department_head', 'like', "%{$search}%");
         }
@@ -43,6 +44,7 @@ class DepartmentController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'shortname' => 'nullable|string|max:100',
             'code' => 'nullable|string|max:50',
             'department_head' => 'nullable|string|max:255',
         ]);
@@ -63,6 +65,7 @@ class DepartmentController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'shortname' => 'nullable|string|max:100',
             'code' => 'nullable|string|max:50',
             'department_head' => 'nullable|string|max:255',
         ]);

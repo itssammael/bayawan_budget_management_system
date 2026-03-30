@@ -11,13 +11,14 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import CurrencyInput from '@/Components/CurrencyInput.vue';
 import InputError from '@/Components/InputError.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
 
 const props = defineProps({
     appropriations: Object,
     filters: Object,
     fund_sources: Array,
     budget_years: Array,
-    budget_categories: Array,
+    ppsas: Array,
     departments: Array,
 });
 
@@ -30,7 +31,7 @@ const editingAppropriation = ref(null);
 const form = useForm({
     fund_source_id: '',
     budget_year_id: '',
-    budget_category_id: '',
+    ppsa_id: '',
     appropriation_type: '',
     account_code: '',
     ppa_description: '',
@@ -79,7 +80,7 @@ const openEditModal = (item) => {
     editingAppropriation.value = item;
     form.fund_source_id = item.fund_source_id;
     form.budget_year_id = item.budget_year_id;
-    form.budget_category_id = item.budget_category_id;
+    form.ppsa_id = item.ppsa_id;
     form.appropriation_type = item.appropriation_type || '';
     form.account_code = item.account_code;
     form.ppa_description = item.ppa_description;
@@ -124,6 +125,11 @@ const showDepartment = computed(() => {
     const user = usePage().props.auth.user;
     return user.department && user.department.name === 'Admin';
 });
+
+const appropriationTypes = [
+    { id: 'MOOE', name: 'MOOE' },
+    { id: 'Capital Outlay', name: 'Capital Outlay' },
+];
 </script>
 
 <template>
@@ -155,7 +161,7 @@ const showDepartment = computed(() => {
                             <tr>
                                 <th class="px-4 py-3 text-left">Year</th>
                                 <th class="px-4 py-3 text-left">Account Code</th>
-                                <th class="px-4 py-3 text-left">Category</th>
+                                <th class="px-4 py-3 text-left">PPSA</th>
                                 <th class="px-4 py-3 text-left">Type</th>
                                 <th v-if="showDepartment" class="px-4 py-3 text-left">Department</th>
                                 <th class="px-4 py-3 text-left">PPA Description</th>
@@ -171,7 +177,7 @@ const showDepartment = computed(() => {
                             <tr v-for="item in appropriations.data" :key="item.id" class="hover:bg-gray-50 transition text-xs">
                                 <td class="px-4 py-4 whitespace-nowrap">{{ item.budget_year.year }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap font-mono">{{ item.account_code }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap">{{ item.budget_category.name }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap">{{ item.ppsa.name }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     <span v-if="item.appropriation_type" class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-[10px] font-medium border border-gray-200">{{ item.appropriation_type }}</span>
                                     <span v-else class="text-gray-400">-</span>
@@ -212,47 +218,57 @@ const showDepartment = computed(() => {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <InputLabel for="fund_source" value="Fund Source" />
-                        <select v-model="form.fund_source_id" class="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                            <option value="">Select Fund Source</option>
-                            <option v-for="fs in fund_sources" :key="fs.id" :value="fs.id">{{ fs.name }}</option>
-                        </select>
+                        <SearchableSelect 
+                            v-model="form.fund_source_id" 
+                            :options="fund_sources" 
+                            placeholder="Select Fund Source"
+                            :error="form.errors.fund_source_id"
+                        />
                         <InputError :message="form.errors.fund_source_id" class="mt-2" />
                     </div>
 
                     <div>
                         <InputLabel for="budget_year" value="Budget Year" />
-                        <select v-model="form.budget_year_id" class="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                            <option value="">Select Year</option>
-                            <option v-for="by in budget_years" :key="by.id" :value="by.id">{{ by.year }}</option>
-                        </select>
+                        <SearchableSelect 
+                            v-model="form.budget_year_id" 
+                            :options="budget_years" 
+                            label="year"
+                            placeholder="Select Year"
+                            :error="form.errors.budget_year_id"
+                        />
                         <InputError :message="form.errors.budget_year_id" class="mt-2" />
                     </div>
 
                     <div>
-                        <InputLabel for="category" value="Category" />
-                        <select v-model="form.budget_category_id" class="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                            <option value="">Select Category</option>
-                            <option v-for="bc in budget_categories" :key="bc.id" :value="bc.id">{{ bc.name }}</option>
-                        </select>
-                        <InputError :message="form.errors.budget_category_id" class="mt-2" />
+                        <InputLabel for="ppsa" value="PPSA" />
+                        <SearchableSelect 
+                            v-model="form.ppsa_id" 
+                            :options="ppsas" 
+                            placeholder="Select PPSA"
+                            :error="form.errors.ppsa_id"
+                        />
+                        <InputError :message="form.errors.ppsa_id" class="mt-2" />
                     </div>
 
                     <div>
                         <InputLabel for="appropriation_type" value="Appropriation Type" />
-                        <select v-model="form.appropriation_type" class="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                            <option value="">Select Type (Optional)</option>
-                            <option value="MOOE">MOOE</option>
-                            <option value="Capital Outlay">Capital Outlay</option>
-                        </select>
+                        <SearchableSelect 
+                            v-model="form.appropriation_type" 
+                            :options="appropriationTypes" 
+                            placeholder="Select Type (Optional)"
+                            :error="form.errors.appropriation_type"
+                        />
                         <InputError :message="form.errors.appropriation_type" class="mt-2" />
                     </div>
                     
                     <div v-if="showDepartment">
                         <InputLabel for="department_id" value="Department" />
-                        <select v-model="form.department_id" class="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                            <option value="">Select Department</option>
-                            <option v-for="dept in departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
-                        </select>
+                        <SearchableSelect 
+                            v-model="form.department_id" 
+                            :options="departments" 
+                            placeholder="Select Department"
+                            :error="form.errors.department_id"
+                        />
                         <InputError :message="form.errors.department_id" class="mt-2" />
                     </div>
 

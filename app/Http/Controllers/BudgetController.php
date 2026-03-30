@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Appropriation;
 use App\Models\BudgetYear;
 use App\Models\FundSource;
-use App\Models\BudgetCategory;
+use App\Models\Ppsa;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,7 +15,7 @@ class BudgetController extends Controller
     {
         $years = BudgetYear::orderBy('year', 'desc')->get();
         
-        $appropriations = Appropriation::with(['fundSource', 'budgetYear', 'budgetCategory'])->get();
+        $appropriations = Appropriation::with(['fundSource', 'budgetYear', 'ppsa'])->get();
 
         // Basic summary data for the dashboard
         $summary = $appropriations->groupBy('fund_source_id')
@@ -33,14 +33,14 @@ class BudgetController extends Controller
         $coKeywords = ['MACHINERY', 'EQUIPMENT', 'VEHICLE', 'FURNITURE', 'CONSTRUCT', 'SYSTEM', 'ICT', 'INFRASTRUCTURE', 'CO'];
         
         $mooeData = $appropriations->filter(function ($item) use ($coKeywords) {
-            $catName = strtoupper($item->budgetCategory->name);
+            $ppsaName = strtoupper($item->ppsa->name);
             foreach ($coKeywords as $keyword) {
-                if (str_contains($catName, $keyword)) return false;
+                if (str_contains($ppsaName, $keyword)) return false;
             }
             return true;
-        })->groupBy('budget_category_id')
+        })->groupBy('ppsa_id')
         ->map(function ($items) {
-            $catName = $items->first()->budgetCategory->name;
+            $catName = $items->first()->ppsa->name;
             return [
                 'category' => strlen($catName) > 25 ? substr($catName, 0, 22) . '...' : $catName,
                 'budget' => $items->sum('appropriated_amount'),
@@ -50,9 +50,9 @@ class BudgetController extends Controller
         })->values();
 
         $coData = $appropriations->filter(function ($item) use ($coKeywords) {
-            $catName = strtoupper($item->budgetCategory->name);
+            $ppsaName = strtoupper($item->ppsa->name);
             foreach ($coKeywords as $keyword) {
-                if (str_contains($catName, $keyword)) return true;
+                if (str_contains($ppsaName, $keyword)) return true;
             }
             return false;
         })->groupBy('ppa_description')
@@ -76,7 +76,7 @@ class BudgetController extends Controller
 
     public function index(Request $request)
     {
-        $query = Appropriation::with(['fundSource', 'budgetYear', 'budgetCategory', 'department']);
+        $query = Appropriation::with(['fundSource', 'budgetYear', 'ppsa', 'department']);
 
         if ($request->has('year_id')) {
             $query->where('budget_year_id', $request->year_id);
@@ -93,7 +93,7 @@ class BudgetController extends Controller
             'filters' => $request->only(['year_id', 'search']),
             'fund_sources' => FundSource::all(),
             'budget_years' => BudgetYear::all(),
-            'budget_categories' => BudgetCategory::all(),
+            'ppsas' => Ppsa::all(),
             'departments' => \App\Models\Department::where('name', '!=', 'Admin')->get(),
         ]);
     }
@@ -103,7 +103,7 @@ class BudgetController extends Controller
         $validated = $request->validate([
             'fund_source_id' => 'required|exists:fund_sources,id',
             'budget_year_id' => 'required|exists:budget_years,id',
-            'budget_category_id' => 'required|exists:budget_categories,id',
+            'ppsa_id' => 'required|exists:ppsas,id',
             'appropriation_type' => 'nullable|in:MOOE,Capital Outlay',
             'account_code' => 'nullable|string',
             'ppa_description' => 'required|string',
@@ -128,7 +128,7 @@ class BudgetController extends Controller
         $validated = $request->validate([
             'fund_source_id' => 'required|exists:fund_sources,id',
             'budget_year_id' => 'required|exists:budget_years,id',
-            'budget_category_id' => 'required|exists:budget_categories,id',
+            'ppsa_id' => 'required|exists:ppsas,id',
             'appropriation_type' => 'nullable|in:MOOE,Capital Outlay',
             'account_code' => 'nullable|string',
             'ppa_description' => 'required|string',

@@ -25,6 +25,7 @@ const editingDepartment = ref(null);
 
 const departmentForm = useForm({
     name: '',
+    shortname: '',
     code: '',
     department_head: '',
 });
@@ -46,6 +47,7 @@ const openCreateDepartmentModal = () => {
 const openEditDepartmentModal = (department) => {
     editingDepartment.value = department;
     departmentForm.name = department.name;
+    departmentForm.shortname = department.shortname;
     departmentForm.code = department.code;
     departmentForm.department_head = department.department_head;
     managingDepartment.value = true;
@@ -113,7 +115,7 @@ const closeDepartmentModal = () => {
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50 uppercase text-xs font-semibold text-gray-500 tracking-wider">
                                 <tr>
-                                    <th class="px-6 py-3 text-left">Code</th>
+                                    <th class="px-6 py-3 text-left">Shortname</th>
                                     <th class="px-6 py-3 text-left">Name</th>
                                     <th class="px-6 py-3 text-left">Department Head</th>
                                     <th class="px-6 py-3 text-center">Actions</th>
@@ -121,9 +123,10 @@ const closeDepartmentModal = () => {
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200 text-sm">
                                 <tr v-for="department in departments.data" :key="department.id" class="hover:bg-gray-50 transition">
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ department.code || '-' }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900">{{ department.shortname || '-' }}</td>
+                                    <td class="px-6 py-4 whitespace-normal max-w-xs">
                                         <div class="text-sm font-medium text-gray-900">{{ department.name }}</div>
+                                        <div class="text-[10px] text-gray-400 uppercase tracking-tighter">Code: {{ department.code || '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ department.department_head || '-' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center space-x-2">
@@ -167,6 +170,12 @@ const closeDepartmentModal = () => {
                         <InputLabel for="name" value="Department Name" />
                         <TextInput v-model="departmentForm.name" type="text" class="mt-1 block w-full" required />
                         <InputError :message="departmentForm.errors.name" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <InputLabel for="shortname" value="Shortname" />
+                        <TextInput v-model="departmentForm.shortname" type="text" class="mt-1 block w-full uppercase" />
+                        <InputError :message="departmentForm.errors.shortname" class="mt-2" />
                     </div>
 
                     <div>

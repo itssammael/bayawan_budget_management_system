@@ -14,7 +14,7 @@ class Appropriation extends Model
     protected $fillable = [
         'fund_source_id',
         'budget_year_id',
-        'budget_category_id',
+        'ppsa_id',
         'account_code',
         'ppa_description',
         'appropriation_type',
@@ -35,9 +35,9 @@ class Appropriation extends Model
         return $this->belongsTo(BudgetYear::class);
     }
 
-    public function budgetCategory()
+    public function ppsa()
     {
-        return $this->belongsTo(BudgetCategory::class);
+        return $this->belongsTo(Ppsa::class);
     }
 
     public function procurementTransactions()
