@@ -18,9 +18,12 @@ const props = defineProps({
     appropriations: Object,
     filters: Object,
     fund_sources: Array,
+    current_budget_year: Object,
     budget_years: Array,
+    budget_classifications: Array,
     ppsas: Array,
     departments: Array,
+    aip_items: Array,
 });
 
 const search = ref(props.filters.search || '');
@@ -31,13 +34,9 @@ const managingAppropriation = ref(false);
 const editingAppropriation = ref(null);
 
 const form = useForm({
-    fund_source_id: '',
-    budget_year_id: '',
-    ppsa_id: '',
-    appropriation_type: '',
+    aip_item_id: '',
+    budget_year_id: `${props.current_budget_year.id}`,
     account_code: '',
-    ppa_description: '',
-    appropriated_amount: 0,
     allotment: 0,
     obligation: 0,
     remarks: '',
@@ -66,6 +65,17 @@ const getStatusColor = (remarks) => {
     return 'text-gray-600 bg-gray-100';
 };
 
+const aipItemOptions = computed(() => {
+    return props.aip_items.map(item => ({
+        ...item,
+        display_label: (item.aip_reference_code || '') + ' - ' + (item.ppa_description || '')
+    }));
+});
+
+const selectedAipItem = computed(() => {
+    return props.aip_items.find(item => item.id === form.aip_item_id) || null;
+});
+
 const openCreateModal = () => {
     editingAppropriation.value = null;
     form.reset();
@@ -80,13 +90,9 @@ const openCreateModal = () => {
 
 const openEditModal = (item) => {
     editingAppropriation.value = item;
-    form.fund_source_id = item.fund_source_id;
+    form.aip_item_id = item.aip_item_id || '';
     form.budget_year_id = item.budget_year_id;
-    form.ppsa_id = item.ppsa_id;
-    form.appropriation_type = item.appropriation_type || '';
     form.account_code = item.account_code;
-    form.ppa_description = item.ppa_description;
-    form.appropriated_amount = item.appropriated_amount;
     form.allotment = item.allotment;
     form.obligation = item.obligation;
     form.remarks = item.remarks;
@@ -223,15 +229,16 @@ const appropriationTypes = [
 
             <template #content>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <InputLabel for="fund_source" value="Fund Source" />
+                    <div class="md:col-span-2">
+                        <InputLabel for="aip_item" value="Linked AIP Item" />
                         <SearchableSelect 
-                            v-model="form.fund_source_id" 
-                            :options="fund_sources" 
-                            placeholder="Select Fund Source"
-                            :error="form.errors.fund_source_id"
+                            v-model="form.aip_item_id" 
+                            :options="aipItemOptions" 
+                            label="display_label" 
+                            placeholder="Select Corresponding AIP Item"
+                            :error="form.errors.aip_item_id"
                         />
-                        <InputError :message="form.errors.fund_source_id" class="mt-2" />
+                        <InputError :message="form.errors.aip_item_id" class="mt-2" />
                     </div>
 
                     <div>
@@ -245,28 +252,43 @@ const appropriationTypes = [
                         />
                         <InputError :message="form.errors.budget_year_id" class="mt-2" />
                     </div>
+                    <div>
+                        <InputLabel for="account_code" value="Account Code" />
+                        <TextInput v-model="form.account_code" type="text" class="mt-1 block w-full" />
+                        <InputError :message="form.errors.account_code" class="mt-2" />
+                    </div>
+                    <div>
+                        <InputLabel for="fund_source" value="Fund Source" />
+                        <SearchableSelect 
+                            :modelValue="selectedAipItem?.fund_source_id" 
+                            :options="fund_sources" 
+                            placeholder="Derived from AIP Item"
+                            disabled
+                        />
+                    </div>
+
+                     <div>
+                        <InputLabel for="appropriation_type" value="Appropriation Type" />
+                        <SearchableSelect 
+                            :modelValue="selectedAipItem?.budget_classification_id" 
+                            :options="props.budget_classifications"
+                            placeholder="Derived from AIP Item"
+                            label="classification_name"
+                            disabled
+                        />
+                    </div>
 
                     <div>
                         <InputLabel for="ppsa" value="PPSA" />
                         <SearchableSelect 
-                            v-model="form.ppsa_id" 
+                            :modelValue="selectedAipItem?.ppsa_id" 
                             :options="ppsas" 
-                            placeholder="Select PPSA"
-                            :error="form.errors.ppsa_id"
+                            placeholder="Derived from AIP Item"
+                            disabled
                         />
-                        <InputError :message="form.errors.ppsa_id" class="mt-2" />
                     </div>
 
-                    <div>
-                        <InputLabel for="appropriation_type" value="Appropriation Type" />
-                        <SearchableSelect 
-                            v-model="form.appropriation_type" 
-                            :options="appropriationTypes" 
-                            placeholder="Select Type (Optional)"
-                            :error="form.errors.appropriation_type"
-                        />
-                        <InputError :message="form.errors.appropriation_type" class="mt-2" />
-                    </div>
+                   
                     
                     <div v-if="showDepartment">
                         <InputLabel for="department_id" value="Department" />
@@ -279,22 +301,16 @@ const appropriationTypes = [
                         <InputError :message="form.errors.department_id" class="mt-2" />
                     </div>
 
-                    <div>
-                        <InputLabel for="account_code" value="Account Code" />
-                        <TextInput v-model="form.account_code" type="text" class="mt-1 block w-full" />
-                        <InputError :message="form.errors.account_code" class="mt-2" />
-                    </div>
+                    
 
                     <div class="md:col-span-2">
                         <InputLabel for="ppa_description" value="PPA Description" />
-                        <textarea v-model="form.ppa_description" class="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="3"></textarea>
-                        <InputError :message="form.errors.ppa_description" class="mt-2" />
+                        <textarea :value="selectedAipItem?.ppa_description" disabled class="w-full mt-1 border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed text-gray-500" rows="3"></textarea>
                     </div>
 
                     <div>
                         <InputLabel for="appropriated_amount" value="Appropriated Amount" />
-                        <CurrencyInput v-model="form.appropriated_amount" class="mt-1 block w-full" />
-                        <InputError :message="form.errors.appropriated_amount" class="mt-2" />
+                        <CurrencyInput :modelValue="selectedAipItem?.amount" class="mt-1 block w-full bg-gray-100 cursor-not-allowed text-gray-500" disabled />
                     </div>
 
                     <div>

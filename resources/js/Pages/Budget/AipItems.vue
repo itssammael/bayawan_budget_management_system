@@ -39,7 +39,7 @@ const bulkForm = useForm({
 });
 
 const form = useForm({
-    budget_year_id: props.current_budget_year.year,
+    budget_year_id: props.current_budget_year.id,
     budget_classification_id: '',
     fund_source_id: '',
     ppsa_id: '',
@@ -125,7 +125,7 @@ const selectSingleCreate = () => {
     
     managingItem.value = true;
 };
-
+console.log(props.items)
 const selectBulkCreate = () => {
     showingSelectionDialog.value = false;
     isBulkCreate.value = true;
@@ -339,7 +339,7 @@ const availableDepartments = computed(() => {
                         <thead class="bg-gray-50 uppercase text-[10px] font-bold text-gray-700">
                             <tr>
                                 <th class="px-3 py-3 text-left">Ref. Code</th>
-                                <th class="px-3 py-3 text-left">PPA Description</th>
+                                <th class="px-3 py-3 text-left">PPSAS/PPA Description</th>
                                 <th v-if="showDepartment" class="px-3 py-3 text-left">Department</th>
                                 <th class="px-3 py-3 text-left">Impl. Depts</th>
                                 <th class="px-3 py-3 text-left">Dates</th>
@@ -359,7 +359,7 @@ const availableDepartments = computed(() => {
                         <tbody class="bg-white divide-y divide-gray-200 text-[10px]">
                             <tr v-for="item in items.data" :key="item.id" class="hover:bg-gray-50 transition">
                                 <td class="px-3 py-1.5 font-semibold text-gray-900">{{ item.aip_reference_code }}</td>
-                                <td class="px-3 py-1.5 max-w-xs whitespace-normal">{{ item.ppa_description }}</td>
+                                <td class="px-3 py-1.5 max-w-xs whitespace-normal"><span class="font-bold block text-[16px]">{{ item.ppsa.name }}</span><span class="text-[10px]">{{ item.ppa_description }}</span></td>
                                 <td v-if="showDepartment" class="px-3 py-1.5">{{ item.department ? item.department.name : '-' }}</td>
                                 
                                 <td class="px-3 py-1.5">

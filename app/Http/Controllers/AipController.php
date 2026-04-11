@@ -16,6 +16,16 @@ class AipController extends Controller
     {
         $query = AipItem::orderBy('aip_reference_code', 'asc')->with(['fundSource', 'department', 'budgetYear', 'budgetClassification', 'ppsa', 'implementingDepartments.department']);
 
+        if (auth()->check() && auth()->user()->department?->name !== 'Admin') {
+            $userDeptId = auth()->user()->department_id;
+            $query->where(function ($q) use ($userDeptId) {
+                $q->where('department_id', $userDeptId)
+                  ->orWhereHas('implementingDepartments', function ($iq) use ($userDeptId) {
+                      $iq->where('department_id', $userDeptId);
+                  });
+            });
+        }
+
         if ($request->has('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('ppa_description', 'like', '%' . $request->search . '%')
