@@ -32,7 +32,7 @@ class SettingsController extends Controller
                 'search_ppsa' => $searchPpsa,
             ],
             'fund_sources' => FundSource::paginate(12, ['*'], 'fs_page')->withQueryString(),
-            'budget_years' => BudgetYear::paginate(12, ['*'], 'by_page')->withQueryString(),
+            'budget_years' => BudgetYear::orderBy('year', 'desc')->paginate(12, ['*'], 'by_page')->withQueryString(),
             'ppsas' => $ppsasQuery->paginate(12, ['*'], 'ppsa_page')->withQueryString(),
             'budget_classifications' => BudgetClassification::paginate(12, ['*'], 'bc_page')->withQueryString(),
             'activity_logs' => ActivityLog::with(['user', 'subject'])->latest()->paginate(20, ['*'], 'log_page')->withQueryString(),
@@ -43,6 +43,7 @@ class SettingsController extends Controller
     public function updateAppearance(Request $request)
     {
         $request->validate([
+            'org_name' => 'nullable|string|max:255',
             'logo' => 'nullable|image|max:2048',
             'icon' => 'nullable|image|max:1024',
             'header_color' => 'nullable|string|size:7',
@@ -50,6 +51,10 @@ class SettingsController extends Controller
             'bg_color' => 'nullable|string|size:7',
             'accent_color' => 'nullable|string|size:7',
         ]);
+
+        if ($request->exists('org_name')) {
+            SystemSetting::set('org_name', $request->org_name);
+        }
 
         if ($request->hasFile('logo')) {
             $path = $request->file('logo')->store('system', 'public');
@@ -135,11 +140,12 @@ class SettingsController extends Controller
         return redirect()->back()->with('success', 'Budget Year updated successfully.');
     }
 
-    public function destroyBudgetYear(BudgetYear $budgetYear)
+    public function setCurrentBudgetYear(BudgetYear $budgetYear)
     {
-        $budgetYear->delete();
+        BudgetYear::query()->update(['is_current' => 0]);
+        $budgetYear->update(['is_current' => 1]);
 
-        return redirect()->back()->with('success', 'Budget Year deleted successfully.');
+        return redirect()->back()->with('success', "Budget Year {$budgetYear->year} set as current successfully.");
     }
 
     // PPSA CRUD

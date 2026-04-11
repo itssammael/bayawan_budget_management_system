@@ -11,7 +11,7 @@ class BudgetYear extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $fillable = ['year'];
+    protected $fillable = ['year', 'is_current'];
 
     public function appropriations()
     {

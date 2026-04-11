@@ -4,6 +4,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import Pagination from '@/Components/Pagination.vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import ConfirmDialog from '@/Components/ConfirmDialog.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -20,6 +21,7 @@ const search = ref(props.filters.search || '');
 // Department Management State
 const confirmingDepartmentDeletion = ref(false);
 const departmentToDelete = ref(null);
+const confirmingSave = ref(false);
 const managingDepartment = ref(false);
 const editingDepartment = ref(null);
 
@@ -54,13 +56,17 @@ const openEditDepartmentModal = (department) => {
 };
 
 const saveDepartment = () => {
+    confirmingSave.value = true;
+};
+
+const proceedSaveDepartment = () => {
     if (editingDepartment.value) {
         departmentForm.put(route('departments.update', editingDepartment.value.id), {
-            onSuccess: () => closeDepartmentModal(),
+            onSuccess: () => { closeDepartmentModal(); confirmingSave.value = false; },
         });
     } else {
         departmentForm.post(route('departments.store'), {
-            onSuccess: () => closeDepartmentModal(),
+            onSuccess: () => { closeDepartmentModal(); confirmingSave.value = false; },
         });
     }
 };
@@ -72,7 +78,7 @@ const confirmDepartmentDeletion = (department) => {
 
 const deleteDepartment = () => {
     router.delete(route('departments.destroy', departmentToDelete.value.id), {
-        onSuccess: () => (confirmingDepartmentDeletion.value = false),
+        onSuccess: () => { confirmingDepartmentDeletion.value = false; departmentToDelete.value = null; },
     });
 };
 
@@ -80,6 +86,7 @@ const closeDepartmentModal = () => {
     managingDepartment.value = false;
     departmentForm.reset();
     editingDepartment.value = null;
+    confirmingSave.value = false;
 };
 </script>
 
@@ -194,21 +201,26 @@ const closeDepartmentModal = () => {
             </template>
         </DialogModal>
 
+        <!-- Confirm Save Modal -->
+        <ConfirmDialog
+            :show="confirmingSave"
+            type="info"
+            title="Confirm Action"
+            :content="editingDepartment ? 'Are you sure you want to update this department?' : 'Are you sure you want to create this department?'"
+            :confirmText="editingDepartment ? 'Update' : 'Create'"
+            @confirm="proceedSaveDepartment"
+            @close="confirmingSave = false"
+        />
+
         <!-- Department Delete Confirmation Modal -->
-        <DialogModal :show="confirmingDepartmentDeletion" @close="confirmingDepartmentDeletion = false">
-            <template #title>Delete Department</template>
-            <template #content>
-                Are you sure you want to delete <strong>{{ departmentToDelete?.name }}</strong>? This action cannot be undone.
-            </template>
-            <template #footer>
-                <SecondaryButton @click="confirmingDepartmentDeletion = false">Cancel</SecondaryButton>
-                <button 
-                    class="ml-3 inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-900 focus:outline-none focus:border-red-900 focus:shadow-outline-red disabled:opacity-25 transition" 
-                    @click="deleteDepartment"
-                >
-                    Delete Department
-                </button>
-            </template>
-        </DialogModal>
+        <ConfirmDialog
+            :show="confirmingDepartmentDeletion"
+            type="danger"
+            title="Delete Department"
+            :content="`Are you sure you want to delete ${departmentToDelete?.name}? This action cannot be undone.`"
+            confirmText="Delete Department"
+            @confirm="deleteDepartment"
+            @close="confirmingDepartmentDeletion = false"
+        />
     </AppLayout>
 </template>

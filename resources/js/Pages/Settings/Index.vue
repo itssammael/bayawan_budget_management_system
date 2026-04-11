@@ -4,6 +4,7 @@ import Pagination from '@/Components/Pagination.vue';
 import { router, useForm } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import ConfirmDialog from '@/Components/ConfirmDialog.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -71,6 +72,12 @@ const confirmingDeletion = ref(false);
 const itemToDelete = ref(null);
 const deleteType = ref(null); // 'fund_source', 'budget_year', 'ppsa', 'classification'
 
+const confirmingEdit = ref(false);
+const editType = ref(null);
+
+const confirmingSetCurrent = ref(false);
+const itemToSetCurrent = ref(null);
+
 // Forms
 const fundSourceForm = useForm({
     name: '',
@@ -90,6 +97,7 @@ const classificationForm = useForm({
 });
 
 const appearanceForm = useForm({
+    org_name: props.system_settings?.org_name || '',
     logo: null,
     icon: null,
     header_color: props.system_settings?.header_color || '#ffffff',
@@ -134,7 +142,15 @@ const openEditFundSource = (item) => {
 };
 const saveFundSource = () => {
     if (editingFundSource.value) {
-        fundSourceForm.put(route('settings.fund-sources.update', editingFundSource.value.id), { onSuccess: () => closeModal() });
+        editType.value = 'fund_source';
+        confirmingEdit.value = true;
+    } else {
+        proceedSaveFundSource();
+    }
+};
+const proceedSaveFundSource = () => {
+    if (editingFundSource.value) {
+        fundSourceForm.put(route('settings.fund-sources.update', editingFundSource.value.id), { onSuccess: () => { closeModal(); } });
     } else {
         fundSourceForm.post(route('settings.fund-sources.store'), { onSuccess: () => closeModal() });
     }
@@ -153,10 +169,36 @@ const openEditBudgetYear = (item) => {
 };
 const saveBudgetYear = () => {
     if (editingBudgetYear.value) {
-        budgetYearForm.put(route('settings.budget-years.update', editingBudgetYear.value.id), { onSuccess: () => closeModal() });
+        editType.value = 'budget_year';
+        confirmingEdit.value = true;
+    } else {
+        proceedSaveBudgetYear();
+    }
+};
+const proceedSaveBudgetYear = () => {
+    if (editingBudgetYear.value) {
+        budgetYearForm.put(route('settings.budget-years.update', editingBudgetYear.value.id), { onSuccess: () => { closeModal(); } });
     } else {
         budgetYearForm.post(route('settings.budget-years.store'), { onSuccess: () => closeModal() });
     }
+};
+
+const confirmSetCurrent = (item) => {
+    if (item.is_current) return;
+    itemToSetCurrent.value = item;
+    confirmingSetCurrent.value = true;
+};
+
+const performSetCurrent = () => {
+    if (!itemToSetCurrent.value) return;
+    router.put(route('settings.budget-years.set-current', itemToSetCurrent.value.id), {}, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            confirmingSetCurrent.value = false;
+            itemToSetCurrent.value = null;
+        }
+    });
 };
 
 // Logic for PPSAs
@@ -172,7 +214,15 @@ const openEditPpsa = (item) => {
 };
 const savePpsa = () => {
     if (editingPpsa.value) {
-        ppsaForm.put(route('settings.ppsas.update', editingPpsa.value.id), { onSuccess: () => closeModal() });
+        editType.value = 'ppsa';
+        confirmingEdit.value = true;
+    } else {
+        proceedSavePpsa();
+    }
+};
+const proceedSavePpsa = () => {
+    if (editingPpsa.value) {
+        ppsaForm.put(route('settings.ppsas.update', editingPpsa.value.id), { onSuccess: () => { closeModal(); } });
     } else {
         ppsaForm.post(route('settings.ppsas.store'), { onSuccess: () => closeModal() });
     }
@@ -191,10 +241,25 @@ const openEditClassification = (item) => {
 };
 const saveClassification = () => {
     if (editingClassification.value) {
-        classificationForm.put(route('settings.budget-classifications.update', editingClassification.value.id), { onSuccess: () => closeModal() });
+        editType.value = 'classification';
+        confirmingEdit.value = true;
+    } else {
+        proceedSaveClassification();
+    }
+};
+const proceedSaveClassification = () => {
+    if (editingClassification.value) {
+        classificationForm.put(route('settings.budget-classifications.update', editingClassification.value.id), { onSuccess: () => { closeModal(); } });
     } else {
         classificationForm.post(route('settings.budget-classifications.store'), { onSuccess: () => closeModal() });
     }
+};
+
+const performEdit = () => {
+    if (editType.value === 'fund_source') proceedSaveFundSource();
+    else if (editType.value === 'budget_year') proceedSaveBudgetYear();
+    else if (editType.value === 'ppsa') proceedSavePpsa();
+    else if (editType.value === 'classification') proceedSaveClassification();
 };
 
 const confirmDelete = (item, type) => {
@@ -206,12 +271,14 @@ const confirmDelete = (item, type) => {
 const performDelete = () => {
     const routes = {
         fund_source: 'settings.fund-sources.destroy',
-        budget_year: 'settings.budget-years.destroy',
         ppsa: 'settings.ppsas.destroy',
         classification: 'settings.budget-classifications.destroy',
     };
     router.delete(route(routes[deleteType.value], itemToDelete.value.id), {
-        onSuccess: () => (confirmingDeletion.value = false),
+        onSuccess: () => {
+            confirmingDeletion.value = false;
+            itemToDelete.value = null;
+        },
     });
 };
 
@@ -220,6 +287,7 @@ const closeModal = () => {
     managingBudgetYear.value = false;
     managingPpsa.value = false;
     managingClassification.value = false;
+    confirmingEdit.value = false;
     fundSourceForm.reset();
     budgetYearForm.reset();
     ppsaForm.reset();
@@ -250,7 +318,7 @@ const closeModal = () => {
                                     {id:'fund_sources', label:'Fund Sources'},
                                     {id:'budget_years', label:'Budget Years'},
                                     {id:'ppsas', label:'PPSAs'},
-                                    {id:'classifications', label:'Budget Classifications'},
+                                    {id:'classifications', label:'Budget Appropriations'},
                                     {id:'appearance', label:'System Appearance'},
                                     {id:'user_logs', label:'User Logs'}
                                 ]"
@@ -311,10 +379,15 @@ const closeModal = () => {
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200 text-xs">
                                     <tr v-for="by in budget_years.data" :key="by.id" class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 font-medium">{{ by.year }}</td>
+                                        <td class="px-6 py-4 font-medium flex items-center space-x-2">
+                                            <span>{{ by.year }}</span>
+                                            <span v-if="by.is_current" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                Current
+                                            </span>
+                                        </td>
                                         <td class="px-6 py-4 text-right space-x-3">
-                                            <button @click="openEditBudgetYear(by)" class="text-[var(--accent-color)] hover:opacity-80 font-semibold">Edit</button>
-                                            <button @click="confirmDelete(by, 'budget_year')" class="text-red-600 hover:text-red-900">Delete</button>
+                                            <button @click="confirmSetCurrent(by)" :class="by.is_current ? 'text-gray-400 cursor-not-allowed' : 'text-green-600 hover:text-green-900 font-semibold transition'" :disabled="by.is_current">{{ by.is_current ? 'Current' : 'Set Current' }}</button>
+                                            <button @click="openEditBudgetYear(by)" class="text-[var(--accent-color)] hover:opacity-80 font-semibold transition">Edit</button>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -399,25 +472,39 @@ const closeModal = () => {
                             </div>
 
                             <form @submit.prevent="saveAppearance" class="space-y-8 max-w-2xl">
-                                <!-- Logo Selection -->
+                                <!-- Logo & Name Selection -->
                                 <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                                    <h4 class="text-sm font-bold text-gray-700 uppercase mb-4">System Logo</h4>
-                                    <div class="flex items-start space-x-6">
+                                    <h4 class="text-sm font-bold text-gray-700 uppercase mb-4">Organization Logo & Name</h4>
+                                    <div class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-6 items-start">
                                         <div class="flex-shrink-0">
                                             <div class="h-24 w-48 bg-white border border-gray-300 rounded flex items-center justify-center overflow-hidden">
                                                 <img v-if="appearancePreview.logo" :src="appearancePreview.logo" class="max-h-full max-w-full object-contain" />
                                                 <span v-else class="text-gray-400 text-xs">No Logo</span>
                                             </div>
                                         </div>
-                                        <div class="flex-grow">
-                                            <input 
-                                                type="file" 
-                                                @change="(e) => onFileChange(e, 'logo')" 
-                                                class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[var(--accent-color-light)] file:text-[var(--accent-color-dark)] hover:file:bg-opacity-20 transition cursor-pointer"
-                                                accept="image/*"
-                                            />
-                                            <p class="mt-2 text-xs text-gray-400">Recommended: PNG or SVG with transparent background (Max 2MB).</p>
-                                            <InputError :message="appearanceForm.errors.logo" class="mt-2" />
+                                        <div class="flex-grow space-y-4 w-full">
+                                            <div>
+                                                <InputLabel for="org_name" value="Organization Name" />
+                                                <TextInput 
+                                                    id="org_name"
+                                                    v-model="appearanceForm.org_name" 
+                                                    type="text" 
+                                                    class="mt-1 block w-full" 
+                                                    placeholder="Enter organization name"
+                                                />
+                                                <InputError :message="appearanceForm.errors.org_name" class="mt-2" />
+                                            </div>
+                                            <div>
+                                                <InputLabel value="Organization Logo" />
+                                                <input 
+                                                    type="file" 
+                                                    @change="(e) => onFileChange(e, 'logo')" 
+                                                    class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[var(--accent-color-light)] file:text-[var(--accent-color-dark)] hover:file:bg-opacity-20 transition cursor-pointer mt-1 block"
+                                                    accept="image/*"
+                                                />
+                                                <p class="mt-2 text-xs text-gray-400">Recommended: PNG or SVG with transparent background (Max 2MB).</p>
+                                                <InputError :message="appearanceForm.errors.logo" class="mt-2" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -690,16 +777,37 @@ const closeModal = () => {
             </template>
         </DialogModal>
 
+        <!-- Confirm Edit Modal -->
+        <ConfirmDialog
+            :show="confirmingEdit"
+            type="info"
+            title="Confirm Changes"
+            content="Are you sure you want to save these changes?"
+            confirmText="Save Changes"
+            @confirm="performEdit"
+            @close="confirmingEdit = false"
+        />
+
         <!-- Delete Confirmation -->
-        <DialogModal :show="confirmingDeletion" @close="confirmingDeletion = false">
-            <template #title>Confirm Deletion</template>
-            <template #content>Are you sure you want to delete this item? This action cannot be undone.</template>
-            <template #footer>
-                <SecondaryButton @click="confirmingDeletion = false">Cancel</SecondaryButton>
-                <button class="ml-3 inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-900 focus:outline-none focus:shadow-outline-red disabled:opacity-25 transition" @click="performDelete">
-                    Delete
-                </button>
-            </template>
-        </DialogModal>
+        <ConfirmDialog
+            :show="confirmingDeletion"
+            type="danger"
+            title="Confirm Deletion"
+            content="Are you sure you want to delete this item? This action cannot be undone."
+            confirmText="Delete"
+            @confirm="performDelete"
+            @close="confirmingDeletion = false"
+        />
+
+        <!-- Set Current Confirmation -->
+        <ConfirmDialog
+            :show="confirmingSetCurrent"
+            type="info"
+            title="Set Current Budget Year"
+            content="Are you sure you want to set this as the current budget year? The currently active year will be unset."
+            confirmText="Set Current"
+            @confirm="performSetCurrent"
+            @close="confirmingSetCurrent = false"
+        />
     </AppLayout>
 </template>

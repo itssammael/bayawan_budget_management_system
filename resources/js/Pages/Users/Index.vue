@@ -4,6 +4,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref, watch, computed } from 'vue';
 import Pagination from '@/Components/Pagination.vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import ConfirmDialog from '@/Components/ConfirmDialog.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -24,6 +25,7 @@ const search = ref(props.filters.search || '');
 // User Management State
 const confirmingUserDeletion = ref(false);
 const userToDelete = ref(null);
+const confirmingSaveUser = ref(false);
 const managingUser = ref(false);
 const editingUser = ref(null);
 
@@ -50,6 +52,7 @@ const isGlobalAdmin = computed(() => {
 // Role Management State
 const confirmingRoleDeletion = ref(false);
 const roleToDelete = ref(null);
+const confirmingSaveRole = ref(false);
 const managingRole = ref(false);
 const editingRole = ref(null);
 
@@ -94,13 +97,17 @@ const openEditUserModal = (user) => {
 };
 
 const saveUser = () => {
+    confirmingSaveUser.value = true;
+};
+
+const proceedSaveUser = () => {
     if (editingUser.value) {
         userForm.put(route('users.update', editingUser.value.id), {
-            onSuccess: () => closeUserModal(),
+            onSuccess: () => { closeUserModal(); confirmingSaveUser.value = false; },
         });
     } else {
         userForm.post(route('users.store'), {
-            onSuccess: () => closeUserModal(),
+            onSuccess: () => { closeUserModal(); confirmingSaveUser.value = false; },
         });
     }
 };
@@ -112,7 +119,7 @@ const confirmUserDeletion = (user) => {
 
 const deleteUser = () => {
     router.delete(route('users.destroy', userToDelete.value.id), {
-        onSuccess: () => (confirmingUserDeletion.value = false),
+        onSuccess: () => { confirmingUserDeletion.value = false; userToDelete.value = null; },
     });
 };
 
@@ -120,6 +127,7 @@ const closeUserModal = () => {
     managingUser.value = false;
     userForm.reset();
     editingUser.value = null;
+    confirmingSaveUser.value = false;
 };
 
 // Role Actions
@@ -138,13 +146,17 @@ const openEditRoleModal = (role) => {
 };
 
 const saveRole = () => {
+    confirmingSaveRole.value = true;
+};
+
+const proceedSaveRole = () => {
     if (editingRole.value) {
         roleForm.put(route('roles.update', editingRole.value.id), {
-            onSuccess: () => closeRoleModal(),
+            onSuccess: () => { closeRoleModal(); confirmingSaveRole.value = false; },
         });
     } else {
         roleForm.post(route('roles.store'), {
-            onSuccess: () => closeRoleModal(),
+            onSuccess: () => { closeRoleModal(); confirmingSaveRole.value = false; },
         });
     }
 };
@@ -156,7 +168,7 @@ const confirmRoleDeletion = (role) => {
 
 const deleteRole = () => {
     router.delete(route('roles.destroy', roleToDelete.value.id), {
-        onSuccess: () => (confirmingRoleDeletion.value = false),
+        onSuccess: () => { confirmingRoleDeletion.value = false; roleToDelete.value = null; },
     });
 };
 
@@ -164,6 +176,7 @@ const closeRoleModal = () => {
     managingRole.value = false;
     roleForm.reset();
     editingRole.value = null;
+    confirmingSaveRole.value = false;
 };
 
 const getPermissionColor = (p) => {
@@ -451,38 +464,48 @@ const departmentsWithOptions = computed(() => {
             </template>
         </DialogModal>
 
+        <!-- Confirm Save User Modal -->
+        <ConfirmDialog
+            :show="confirmingSaveUser"
+            type="info"
+            title="Confirm Action"
+            :content="editingUser ? 'Are you sure you want to update this user?' : 'Are you sure you want to create this user?'"
+            :confirmText="editingUser ? 'Update' : 'Create'"
+            @confirm="proceedSaveUser"
+            @close="confirmingSaveUser = false"
+        />
+
+        <!-- Confirm Save Role Modal -->
+        <ConfirmDialog
+            :show="confirmingSaveRole"
+            type="info"
+            title="Confirm Action"
+            :content="editingRole ? 'Are you sure you want to update this role?' : 'Are you sure you want to create this role?'"
+            :confirmText="editingRole ? 'Update' : 'Create'"
+            @confirm="proceedSaveRole"
+            @close="confirmingSaveRole = false"
+        />
+
         <!-- User Delete Confirmation Modal -->
-        <DialogModal :show="confirmingUserDeletion" @close="confirmingUserDeletion = false">
-            <template #title>Delete User</template>
-            <template #content>
-                Are you sure you want to delete <strong>{{ userToDelete?.name }}</strong>? This action cannot be undone.
-            </template>
-            <template #footer>
-                <SecondaryButton @click="confirmingUserDeletion = false">Cancel</SecondaryButton>
-                <button 
-                    class="ml-3 inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-900 focus:outline-none focus:border-red-900 focus:shadow-outline-red disabled:opacity-25 transition" 
-                    @click="deleteUser"
-                >
-                    Delete User
-                </button>
-            </template>
-        </DialogModal>
+        <ConfirmDialog
+            :show="confirmingUserDeletion"
+            type="danger"
+            title="Delete User"
+            :content="`Are you sure you want to delete ${userToDelete?.name}? This action cannot be undone.`"
+            confirmText="Delete User"
+            @confirm="deleteUser"
+            @close="confirmingUserDeletion = false"
+        />
 
         <!-- Role Delete Confirmation Modal -->
-        <DialogModal :show="confirmingRoleDeletion" @close="confirmingRoleDeletion = false">
-            <template #title>Delete Role</template>
-            <template #content>
-                Are you sure you want to delete <strong>{{ roleToDelete?.name }}</strong>? Users assigned to this role will no longer have its permissions.
-            </template>
-            <template #footer>
-                <SecondaryButton @click="confirmingRoleDeletion = false">Cancel</SecondaryButton>
-                <button 
-                    class="ml-3 inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-900 focus:outline-none focus:border-red-900 focus:shadow-outline-red disabled:opacity-25 transition" 
-                    @click="deleteRole"
-                >
-                    Delete Role
-                </button>
-            </template>
-        </DialogModal>
+        <ConfirmDialog
+            :show="confirmingRoleDeletion"
+            type="danger"
+            title="Delete Role"
+            :content="`Are you sure you want to delete ${roleToDelete?.name}? Users assigned to this role will no longer have its permissions.`"
+            confirmText="Delete Role"
+            @confirm="deleteRole"
+            @close="confirmingRoleDeletion = false"
+        />
     </AppLayout>
 </template>

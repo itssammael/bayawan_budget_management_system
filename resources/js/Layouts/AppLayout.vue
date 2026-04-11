@@ -96,8 +96,11 @@ const logout = () => {
                         <div class="flex">
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
-                                <Link :href="route('dashboard')">
+                                <Link :href="route('dashboard')" class="flex items-center space-x-3">
                                     <ApplicationMark class="block h-9 w-auto" />
+                                    <span v-if="$page.props.system_settings?.org_name" class="font-bold text-lg hidden sm:block truncate max-w-[200px] lg:max-w-[15rem]" :style="{ color: 'var(--header-text-color)' }">
+                                        {{ $page.props.system_settings.org_name }}
+                                    </span>
                                 </Link>
                             </div>
 

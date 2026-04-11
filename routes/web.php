@@ -48,7 +48,7 @@ Route::middleware([
 
         Route::post('/settings/budget-years', [SettingsController::class, 'storeBudgetYear'])->name('settings.budget-years.store');
         Route::put('/settings/budget-years/{budgetYear}', [SettingsController::class, 'updateBudgetYear'])->name('settings.budget-years.update');
-        Route::delete('/settings/budget-years/{budgetYear}', [SettingsController::class, 'destroyBudgetYear'])->name('settings.budget-years.destroy');
+        Route::put('/settings/budget-years/{budgetYear}/set-current', [SettingsController::class, 'setCurrentBudgetYear'])->name('settings.budget-years.set-current');
 
         Route::post('/settings/ppsas', [SettingsController::class, 'storePpsa'])->name('settings.ppsas.store');
         Route::put('/settings/ppsas/{ppsa}', [SettingsController::class, 'updatePpsa'])->name('settings.ppsas.update');
@@ -82,6 +82,7 @@ Route::middleware([
     // AIP Management
     Route::get('/budget/aip', [AipController::class, 'index'])->name('budget.aip');
     Route::post('/budget/aip', [AipController::class, 'store'])->name('budget.aip.store');
+    Route::post('/budget/aip/bulk', [AipController::class, 'bulkStore'])->name('budget.aip.bulk-store');
     Route::put('/budget/aip/{aip}', [AipController::class, 'update'])->name('budget.aip.update');
     Route::delete('/budget/aip/{aip}', [AipController::class, 'destroy'])->name('budget.aip.destroy');
 });

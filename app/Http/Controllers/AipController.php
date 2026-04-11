@@ -14,7 +14,7 @@ class AipController extends Controller
 {
     public function index(Request $request)
     {
-        $query = AipItem::with(['fundSource', 'department', 'budgetYear', 'budgetClassification', 'ppsa', 'implementingDepartments.department']);
+        $query = AipItem::orderBy('aip_reference_code', 'asc')->with(['fundSource', 'department', 'budgetYear', 'budgetClassification', 'ppsa', 'implementingDepartments.department']);
 
         if ($request->has('search')) {
             $query->where(function ($q) use ($request) {
@@ -26,12 +26,13 @@ class AipController extends Controller
             });
         }
 
-        $items = $query->paginate(15)->withQueryString();
+        $items = $query->paginate(8)->withQueryString();
 
         return Inertia::render('Budget/AipItems', [
             'items' => $items,
             'filters' => $request->only(['search']),
             'fund_sources' => FundSource::all(),
+            'current_budget_year' => BudgetYear::where('is_current', 1)->first(),
             'budget_years' => BudgetYear::orderBy('year', 'desc')->get(),
             'budget_classifications' => BudgetClassification::all(),
             'ppsas' => Ppsa::all(),
@@ -74,6 +75,48 @@ class AipController extends Controller
         });
 
         return redirect()->back()->with('success', 'AIP Item created successfully.');
+    }
+
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.budget_year_id' => 'required|exists:budget_years,id',
+            'items.*.budget_classification_id' => 'required|exists:budget_classifications,id',
+            'items.*.fund_source_id' => 'required|exists:fund_sources,id',
+            'items.*.ppsa_id' => 'nullable|exists:ppsas,id',
+            'items.*.aip_reference_code' => 'required|string|unique:aip_items,aip_reference_code',
+            'items.*.ppa_description' => 'required|string',
+            'items.*.department_id' => 'required|exists:departments,id',
+            'items.*.start_date' => 'required|date',
+            'items.*.end_date' => 'required|date',
+            'items.*.expected_outputs' => 'nullable|string',
+            'items.*.amount' => 'required|numeric|min:0',
+            'items.*.implementing_departments' => 'nullable|array',
+            'items.*.implementing_departments.*.department_id' => 'required|exists:departments,id',
+            'items.*.implementing_departments.*.amount' => 'required|numeric|min:0',
+        ]);
+
+        $items = $request->input('items');
+
+        \DB::transaction(function () use ($items) {
+            foreach ($items as $itemData) {
+                $implementingDepartments = $itemData['implementing_departments'] ?? [];
+                unset($itemData['implementing_departments']);
+                
+                if (auth()->user()->department?->name !== 'Admin') {
+                    $itemData['department_id'] = auth()->user()->department_id;
+                }
+
+                $aip = AipItem::create($itemData);
+                
+                foreach ($implementingDepartments as $dept) {
+                    $aip->implementingDepartments()->create($dept);
+                }
+            }
+        });
+
+        return redirect()->back()->with('success', count($items) . ' AIP Items created successfully.');
     }
 
     public function update(Request $request, AipItem $aip)

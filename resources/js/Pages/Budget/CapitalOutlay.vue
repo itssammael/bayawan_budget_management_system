@@ -5,6 +5,7 @@ import { ref, watch, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import Pagination from '@/Components/Pagination.vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import ConfirmDialog from '@/Components/ConfirmDialog.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -23,6 +24,7 @@ const props = defineProps({
 const search = ref(props.filters.search || '');
 const confirmingTransactionDeletion = ref(false);
 const itemToDelete = ref(null);
+const confirmingSave = ref(false);
 const managingTransaction = ref(false);
 const editingTransaction = ref(null);
 
@@ -90,13 +92,17 @@ const openEditModal = (item) => {
 };
 
 const saveTransaction = () => {
+    confirmingSave.value = true;
+};
+
+const proceedSaveTransaction = () => {
     if (editingTransaction.value) {
         form.put(route('budget.procurement.update', editingTransaction.value.id), {
-            onSuccess: () => closeModal(),
+            onSuccess: () => { closeModal(); confirmingSave.value = false; },
         });
     } else {
         form.post(route('budget.procurement.store'), {
-            onSuccess: () => closeModal(),
+            onSuccess: () => { closeModal(); confirmingSave.value = false; },
         });
     }
 };
@@ -108,7 +114,7 @@ const confirmDeletion = (item) => {
 
 const deleteTransaction = () => {
     router.delete(route('budget.procurement.destroy', itemToDelete.value.id), {
-        onSuccess: () => (confirmingTransactionDeletion.value = false),
+        onSuccess: () => { confirmingTransactionDeletion.value = false; itemToDelete.value = null; },
     });
 };
 
@@ -116,6 +122,7 @@ const closeModal = () => {
     managingTransaction.value = false;
     form.reset();
     editingTransaction.value = null;
+    confirmingSave.value = false;
 };
 
 const showDepartment = computed(() => {
@@ -302,16 +309,26 @@ const searchableAppropriations = computed(() => {
             </template>
         </DialogModal>
 
+        <!-- Confirm Save Modal -->
+        <ConfirmDialog
+            :show="confirmingSave"
+            type="info"
+            title="Confirm Action"
+            :content="editingTransaction ? 'Are you sure you want to update this transaction?' : 'Are you sure you want to create this transaction?'"
+            :confirmText="editingTransaction ? 'Update' : 'Create'"
+            @confirm="proceedSaveTransaction"
+            @close="confirmingSave = false"
+        />
+
         <!-- Delete Confirmation Modal -->
-        <DialogModal :show="confirmingTransactionDeletion" @close="confirmingTransactionDeletion = false">
-            <template #title>Delete Transaction</template>
-            <template #content>Are you sure you want to delete this procurement transaction?</template>
-            <template #footer>
-                <SecondaryButton @click="confirmingTransactionDeletion = false">Cancel</SecondaryButton>
-                <button class="ml-3 inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-900 focus:outline-none focus:border-red-900 focus:shadow-outline-red disabled:opacity-25 transition" @click="deleteTransaction">
-                    Delete
-                </button>
-            </template>
-        </DialogModal>
+        <ConfirmDialog
+            :show="confirmingTransactionDeletion"
+            type="danger"
+            title="Delete Transaction"
+            content="Are you sure you want to delete this procurement transaction? This action cannot be undone."
+            confirmText="Delete"
+            @confirm="deleteTransaction"
+            @close="confirmingTransactionDeletion = false"
+        />
     </AppLayout>
 </template>
