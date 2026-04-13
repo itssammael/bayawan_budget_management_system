@@ -11,7 +11,7 @@ class ProcurementController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ProcurementTransaction::with(['appropriation.fundSource', 'appropriation.budgetYear', 'department']);
+        $query = ProcurementTransaction::with(['appropriation.aipItem.fundSource', 'appropriation.budgetYear', 'department']);
 
         if ($request->has('search')) {
             $query->where('item_description', 'like', '%' . $request->search . '%')
@@ -23,7 +23,7 @@ class ProcurementController extends Controller
         return Inertia::render('Budget/CapitalOutlay', [
             'transactions' => $transactions,
             'filters' => $request->only(['search']),
-            'appropriations' => Appropriation::with(['fundSource', 'budgetYear'])->orderBy('ppa_description')->get(),
+            'appropriations' => Appropriation::with(['aipItem.fundSource', 'budgetYear'])->get()->sortBy('ppa_description')->values(),
             'departments' => \App\Models\Department::where('name', '!=', 'Admin')->get(),
         ]);
     }
