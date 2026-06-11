@@ -1,0 +1,248 @@
+[
+    {
+        "ppa_description": "Travelling Expenses",
+        "classification": "MOOE",
+        "amount": 450000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Training Expenses",
+        "classification": "MOOE",
+        "amount": 2900000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Office Supplies Expenses",
+        "classification": "MOOE",
+        "amount": 805410.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Food Supplies Expenses",
+        "classification": "MOOE",
+        "amount": 1650000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Drugs and Medicines Expenses",
+        "classification": "MOOE",
+        "amount": 569030.0,
+        "pr_no": "100-26-01-019"
+    },
+    {
+        "ppa_description": "Medical, Dental & Laboratory Supplies Expenses",
+        "classification": "MOOE",
+        "amount": 768815.0,
+        "pr_no": "100-26-01-018"
+    },
+    {
+        "ppa_description": "Fuel, Oil and Lubricants Expenses",
+        "classification": "MOOE",
+        "amount": 1600000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Other Supplies and Materials Expenses",
+        "classification": "MOOE",
+        "amount": 4393555.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Repair & Maintenance - Machinery & Equipment",
+        "classification": "MOOE",
+        "amount": 200000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Repair & Maintenance - Transportation Equipment",
+        "classification": "MOOE",
+        "amount": 250000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "REPAIR & MAINTENANCE - Buildings & Other Structures - Repair & Maintenance of Evacuation Center (CSWD)",
+        "classification": "MOOE",
+        "amount": 100000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Insurance Expenses \nDRRM 120k\nCAGRI 3M",
+        "classification": "MOOE",
+        "amount": 3120000.0,
+        "pr_no": "DRRM 100-26-01-021"
+    },
+    {
+        "ppa_description": "Printing and Publication Expenses",
+        "classification": "MOOE",
+        "amount": 220000.0,
+        "pr_no": "100-26-01-017"
+    },
+    {
+        "ppa_description": "Rent Expenses",
+        "classification": "MOOE",
+        "amount": 70000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Support to DRRM-H Program",
+        "classification": "MOOE",
+        "amount": 2771250.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit Inflatable Rubber Boat",
+        "classification": "Capital Outlay",
+        "amount": 800000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit Disaster Relief Service Vehicle",
+        "classification": "Capital Outlay",
+        "amount": 1850000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit Livestock/Animals Evacuation Transport Vehicle (Dog Pound Cab)",
+        "classification": "Capital Outlay",
+        "amount": 1000000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit Chainsaw MS 382",
+        "classification": "Capital Outlay",
+        "amount": 75000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit Chainsaw MS 070",
+        "classification": "Capital Outlay",
+        "amount": 90000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit Portable Generator",
+        "classification": "Capital Outlay",
+        "amount": 50000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit Container Van",
+        "classification": "Capital Outlay",
+        "amount": 420000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit Tent for Command Post",
+        "classification": "Capital Outlay",
+        "amount": 280000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "15 Units Air Cooler, Heavy Duty for Evacuation Center",
+        "classification": "Capital Outlay",
+        "amount": 750000.0,
+        "pr_no": "100-26-01-020"
+    },
+    {
+        "ppa_description": "1 Unit Computer with Printer",
+        "classification": "Capital Outlay",
+        "amount": 70000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit Laptop Computer",
+        "classification": "Capital Outlay",
+        "amount": 70000.0,
+        "pr_no": "100-26-01-016"
+    },
+    {
+        "ppa_description": "1 Unit Drone",
+        "classification": "Capital Outlay",
+        "amount": 50000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit DSLR Camera",
+        "classification": "Capital Outlay",
+        "amount": 70000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "2 Units Backhoe",
+        "classification": "Capital Outlay",
+        "amount": 13992000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "1 Unit Payloader",
+        "classification": "Capital Outlay",
+        "amount": 5095000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Construction of Livestock/Animals Evac Center",
+        "classification": "Capital Outlay",
+        "amount": 500000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Construction of DRRM Staging Area for DRRM Equipment and Rescue Vehicle",
+        "classification": "Capital Outlay",
+        "amount": 5000000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Rehabilitation for Climate Resiliency of CAMISA Communal Irrigation System Main Canal, at Brgy. Pagatban, Bayawan City",
+        "classification": "Capital Outlay",
+        "amount": 3800000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Emergency Repair of Various irrigation facilities",
+        "classification": "Capital Outlay",
+        "amount": 1000000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Construction of Grouted RipRap Class A at Cansumalig National High School, Bayawan City",
+        "classification": "Capital Outlay",
+        "amount": 2413484.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Rehabilitation of Tan-ayan Bridge, Brgy Nangka",
+        "classification": "Capital Outlay",
+        "amount": 7000000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Slope Protection at Sitio Terong FMR Brgy Narra",
+        "classification": "Capital Outlay",
+        "amount": 3000000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Slope Protection at Tabuan FMR",
+        "classification": "Capital Outlay",
+        "amount": 3000000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Construction of Hanging Steel Footbridge for Sitio Ilawod to Sitio Lower Bucao, Tabuan Bayawan City",
+        "classification": "Capital Outlay",
+        "amount": 3500000.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Quick Response Fund (QRF)",
+        "classification": "Capital Outlay",
+        "amount": 32293998.0,
+        "pr_no": null
+    },
+    {
+        "ppa_description": "Unprogrammed",
+        "classification": "Capital Outlay",
+        "amount": 1609118.0,
+        "pr_no": null
+    }
+]

@@ -31,6 +31,7 @@ Route::middleware([
     // Procurement Tracker
     Route::get('/budget/procurement', [ProcurementController::class, 'index'])->name('budget.procurement');
     Route::post('/budget/procurement', [ProcurementController::class, 'store'])->name('budget.procurement.store');
+    Route::post('/budget/procurement/bulk', [ProcurementController::class, 'bulkStore'])->name('budget.procurement.bulk-store');
     Route::put('/budget/procurement/{procurement}', [ProcurementController::class, 'update'])->name('budget.procurement.update');
     Route::delete('/budget/procurement/{procurement}', [ProcurementController::class, 'destroy'])->name('budget.procurement.destroy');
 
