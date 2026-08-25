@@ -125,7 +125,7 @@ const selectSingleCreate = () => {
     
     managingItem.value = true;
 };
-console.log(props.items)
+
 const selectBulkCreate = () => {
     showingSelectionDialog.value = false;
     isBulkCreate.value = true;
